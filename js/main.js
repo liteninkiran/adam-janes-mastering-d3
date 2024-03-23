@@ -13,10 +13,10 @@ d3.json('data/buildings.json').then(data => {
         .range([0, 400])
         .paddingInner(0.3)
         .paddingOuter(0.2)
-    console.log(x(names[1]));
+
     const y = d3.scaleLinear()
-        .domain([0, 828 + 20])
-        .range([0, 400]);
+        .domain([0, d3.max(data, d => d.height) + 20])
+        .range([0, 400])
 
     const rects = svg
         .selectAll('rect')
