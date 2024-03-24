@@ -35,57 +35,68 @@ g.append('text')
     .attr('transform', 'rotate(-90)')
     .text('Revenue (£)');
 
+// X Scale
+const x = d3.scaleBand()
+    .range([0, WIDTH])
+    .paddingInner(0.3)
+    .paddingOuter(0.2)
+
+// Y Scale
+const y = d3.scaleLinear()
+    .range([HEIGHT, 0]);
+
+const xAxisGroup = g.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', `translate(0, ${HEIGHT})`);
+
+const yAxisGroup = g.append('g')
+    .attr('class', 'y axis');
+
 d3.csv('data/revenues.csv').then(data => {
 
     // Convert strings to numbers
     data.forEach(d => d.revenue = Number(d.revenue));
     data.forEach(d => d.profit = Number(d.profit));
 
-    // X Scale
-    const x = d3.scaleBand()
-        .domain(data.map(row => row.month))
-        .range([0, WIDTH])
-        .paddingInner(0.3)
-        .paddingOuter(0.2)
+    d3.interval(() => {
+        update(data)
+    }, 1000);
+
+    update(data)
+});
+
+function update(data) {
+
+    x.domain(data.map(row => row.month));
+    y.domain([0, d3.max(data, d => d.revenue)]);
 
     // X Axis
     const xAxisCall = d3.axisBottom(x);
-    g.append('g')
-        .attr('class', 'x axis')
-        .attr('transform', `translate(0, ${HEIGHT})`)
-        .call(xAxisCall)
+    xAxisGroup.call(xAxisCall)
         .selectAll('text')
         .attr('y', '10')
         .attr('x', '0')
         .attr('text-anchor', 'centre');
 
-    // Y Scale
-    const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.revenue)])
-        .range([HEIGHT, 0]);
 
     // Y Axis
     const yAxisCall = d3.axisLeft(y)
         .ticks(5)
         .tickFormat(d => '£' + d);
-    g.append('g')
-        .attr('class', 'y axis')
-        .call(yAxisCall);
 
-    // Add bars
-    const rects = g
-        .selectAll('rect')
-        .data(data);
+    yAxisGroup.call(yAxisCall);
 
-    // Add bars
-    rects.enter().append('rect')
-        .attr('y', d => y(d.revenue))
-        .attr('x', d => x(d.month))
-        .attr('width', x.bandwidth)
-        .attr('height', d => HEIGHT - y(d.revenue))
-        .attr('fill', 'grey');
+    // // Add bars
+    // const rects = g
+    //     .selectAll('rect')
+    //     .data(data);
 
-    d3.interval(() => {
-        console.log('Hello World');
-    }, 1000);
-});
+    // // Add bars
+    // rects.enter().append('rect')
+    //     .attr('y', d => y(d.revenue))
+    //     .attr('x', d => x(d.month))
+    //     .attr('width', x.bandwidth)
+    //     .attr('height', d => HEIGHT - y(d.revenue))
+    //     .attr('fill', 'grey');
+
+}
