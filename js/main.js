@@ -90,29 +90,26 @@ function update(data) {
     yAxisGroup.transition(t).call(yAxisCall);
 
     // JOIN - bind data
-    const rects = g
-        .selectAll('rect')
+    const circles = g
+        .selectAll('circle')
         .data(data, d => d.month);
 
     // EXIT - remove old elements
-    rects.exit()
+    circles.exit()
         .attr('fill', 'red')
         .transition(t)
-        .attr('height', 0)
-        .attr('y', y(0))
+        .attr('cy', y(0))
         .remove();
 
     // MERGE - Enter and update
-    rects.enter().append('rect')
+    circles.enter().append('circle')
         .attr('fill', 'grey')
-        .attr('y', y(0))
-        .attr('height', 0)
-        .merge(rects)
+        .attr('cy', y(0))
+        .attr('r', 5)
+        .merge(circles)
         .transition(t)
-        .attr('x', d => x(d.month))
-        .attr('width', x.bandwidth)
-        .attr('y', d => y(d[value]))
-        .attr('height', d => HEIGHT - y(d[value]));
+        .attr('cx', d => x(d.month) + (x.bandwidth() / 2))
+        .attr('cy', d => y(d[value]));
 
     yLabel.text(text);
 }
