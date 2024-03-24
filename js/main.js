@@ -38,7 +38,7 @@ const yLabel = g.append('text')
 const x = d3.scaleBand()
     .range([0, WIDTH])
     .paddingInner(0.3)
-    .paddingOuter(0.2)
+    .paddingOuter(0.2);
 
 // Y Scale
 const y = d3.scaleLinear()
@@ -58,14 +58,16 @@ d3.csv('data/revenues.csv').then(data => {
         d.revenue = Number(d.revenue);
         d.profit = Number(d.profit);
     });
-    d3.interval(() => update(data), 10000);
+    d3.interval(() => {
+        flag = !flag;
+        const newData = flag ? data : data.slice(1);
+        update(newData);
+    }, 1000);
     update(data);
 });
 
 function update(data) {
-
-    flag = !flag;
-
+    const t = d3.transition().duration(750);
     const text = flag ? 'Profit (£)' : 'Revenue (£)';
     const value = flag ? 'profit' : 'revenue';
 
@@ -75,6 +77,7 @@ function update(data) {
     // X Axis
     const xAxisCall = d3.axisBottom(x);
     xAxisGroup.call(xAxisCall)
+        .transition(t)
         .selectAll('text')
         .attr('y', '10')
         .attr('x', '0')
@@ -84,30 +87,32 @@ function update(data) {
     const yAxisCall = d3.axisLeft(y)
         .ticks(5)
         .tickFormat(d => '£' + d);
-
-    yAxisGroup.call(yAxisCall);
+    yAxisGroup.transition(t).call(yAxisCall);
 
     // JOIN - bind data
     const rects = g
         .selectAll('rect')
-        .data(data);
+        .data(data, d => d.month);
 
     // EXIT - remove old elements
-    rects.exit().remove();
+    rects.exit()
+        .attr('fill', 'red')
+        .transition(t)
+        .attr('height', 0)
+        .attr('y', y(0))
+        .remove();
 
-    // UPDATE - update existing elements
-    rects.attr('y', d => y(d[value]))
-        .attr('x', d => x(d.month))
-        .attr('width', x.bandwidth)
-        .attr('height', d => HEIGHT - y(d[value]));
-
-    // ENTER - add new elements
+    // MERGE - Enter and update
     rects.enter().append('rect')
-        .attr('y', d => y(d[value]))
+        .attr('fill', 'grey')
+        .attr('y', y(0))
+        .attr('height', 0)
+        .merge(rects)
+        .transition(t)
         .attr('x', d => x(d.month))
         .attr('width', x.bandwidth)
-        .attr('height', d => HEIGHT - y(d[value]))
-        .attr('fill', 'grey');
+        .attr('y', d => y(d[value]))
+        .attr('height', d => HEIGHT - y(d[value]));
 
     yLabel.text(text);
 }
