@@ -78,7 +78,6 @@ function update(data) {
         .attr('x', '0')
         .attr('text-anchor', 'centre');
 
-
     // Y Axis
     const yAxisCall = d3.axisLeft(y)
         .ticks(5)
@@ -86,17 +85,25 @@ function update(data) {
 
     yAxisGroup.call(yAxisCall);
 
-    // // Add bars
-    // const rects = g
-    //     .selectAll('rect')
-    //     .data(data);
+    // JOIN - bind data
+    const rects = g
+        .selectAll('rect')
+        .data(data);
 
-    // // Add bars
-    // rects.enter().append('rect')
-    //     .attr('y', d => y(d.revenue))
-    //     .attr('x', d => x(d.month))
-    //     .attr('width', x.bandwidth)
-    //     .attr('height', d => HEIGHT - y(d.revenue))
-    //     .attr('fill', 'grey');
+    // EXIT - remove old elements
+    rects.exit().remove();
 
+    // UPDATE - update existing elements
+    rects.attr('y', d => y(d.revenue))
+        .attr('x', d => x(d.month))
+        .attr('width', x.bandwidth)
+        .attr('height', d => HEIGHT - y(d.revenue));
+
+    // ENTER - add new elements
+    rects.enter().append('rect')
+        .attr('y', d => y(d.revenue))
+        .attr('x', d => x(d.month))
+        .attr('width', x.bandwidth)
+        .attr('height', d => HEIGHT - y(d.revenue))
+        .attr('fill', 'grey');
 }
