@@ -37,8 +37,6 @@ g.append('text')
 
 d3.csv('data/revenues.csv').then(data => {
 
-    console.log(data);
-
     // Convert strings to numbers
     data.forEach(d => d.revenue = Number(d.revenue));
     data.forEach(d => d.profit = Number(d.profit));
@@ -86,4 +84,8 @@ d3.csv('data/revenues.csv').then(data => {
         .attr('width', x.bandwidth)
         .attr('height', d => HEIGHT - y(d.revenue))
         .attr('fill', 'grey');
+
+    d3.interval(() => {
+        console.log('Hello World');
+    }, 1000);
 });
