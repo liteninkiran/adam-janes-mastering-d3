@@ -17,7 +17,7 @@ const g = svg.append('g')
     .attr('transform', TRANSFORM);
 
 // X label
-g.append('text')
+const xLabel = g.append('text')
     .attr('class', 'x axis-label')
     .attr('x', WIDTH / 2)
     .attr('y', HEIGHT + (MARGIN.BOTTOM - 20))
@@ -26,14 +26,13 @@ g.append('text')
     .text('Month');
 
 // Y label
-g.append('text')
+const yLabel = g.append('text')
     .attr('class', 'y axis-label')
     .attr('x', - (HEIGHT / 2))
     .attr('y', -60)
     .attr('font-size', '20px')
     .attr('text-anchor', 'middle')
-    .attr('transform', 'rotate(-90)')
-    .text('Revenue (£)');
+    .attr('transform', 'rotate(-90)');
 
 // X Scale
 const x = d3.scaleBand()
@@ -52,23 +51,26 @@ const xAxisGroup = g.append('g')
 const yAxisGroup = g.append('g')
     .attr('class', 'y axis');
 
+let flag = true;
+
 d3.csv('data/revenues.csv').then(data => {
-
-    // Convert strings to numbers
-    data.forEach(d => d.revenue = Number(d.revenue));
-    data.forEach(d => d.profit = Number(d.profit));
-
-    d3.interval(() => {
-        update(data)
-    }, 1000);
-
-    update(data)
+    data.forEach(d => {
+        d.revenue = Number(d.revenue);
+        d.profit = Number(d.profit);
+    });
+    d3.interval(() => update(data), 10000);
+    update(data);
 });
 
 function update(data) {
 
+    flag = !flag;
+
+    const text = flag ? 'Profit (£)' : 'Revenue (£)';
+    const value = flag ? 'profit' : 'revenue';
+
     x.domain(data.map(row => row.month));
-    y.domain([0, d3.max(data, d => d.revenue)]);
+    y.domain([0, d3.max(data, d => d[value])]);
 
     // X Axis
     const xAxisCall = d3.axisBottom(x);
@@ -94,16 +96,18 @@ function update(data) {
     rects.exit().remove();
 
     // UPDATE - update existing elements
-    rects.attr('y', d => y(d.revenue))
+    rects.attr('y', d => y(d[value]))
         .attr('x', d => x(d.month))
         .attr('width', x.bandwidth)
-        .attr('height', d => HEIGHT - y(d.revenue));
+        .attr('height', d => HEIGHT - y(d[value]));
 
     // ENTER - add new elements
     rects.enter().append('rect')
-        .attr('y', d => y(d.revenue))
+        .attr('y', d => y(d[value]))
         .attr('x', d => x(d.month))
         .attr('width', x.bandwidth)
-        .attr('height', d => HEIGHT - y(d.revenue))
+        .attr('height', d => HEIGHT - y(d[value]))
         .attr('fill', 'grey');
+
+    yLabel.text(text);
 }
