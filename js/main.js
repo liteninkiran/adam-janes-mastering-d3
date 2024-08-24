@@ -127,6 +127,9 @@ function update(data) {
 
     // Update the time label
     timeLabel.text(String(time + 1800));
+
+    $('#year')[0].innerHTML = String(time + 1800);
+    $('#date-slider').slider('value', Number(time + 1800));
 }
 
 const step = () => {
@@ -152,3 +155,13 @@ $('#reset-button').on('click', () => {
 });
 
 $('#continent-select').on('change', () => update(formattedData[time]));
+
+$('#date-slider').slider({
+    min: 1800,
+    max: 2014,
+    step: 1,
+    slide: (event, ui) => {
+        time = ui.value - 1800;
+        update(formattedData[time]);
+    }
+});
