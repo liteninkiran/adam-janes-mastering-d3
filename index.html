@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 
     <head>
@@ -30,6 +30,30 @@
 
         </div>
 
+        <!-- Bootstrap grid setup -->
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <button id="play-button" class="btn btn-primary">Play</button>
+                    <button id="reset-button" class="btn btn-primary">Reset</button>
+                </div>
+                <div class="col-md-6">
+                    <select id="continent-select" class="form-control">
+                        <option selected value="all">All</option>
+                        <option value="europe">Europe</option>
+                        <option value="asia">Asia</option>
+                        <option value="americas">Americas</option>
+                        <option value="africa">Africa</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="chart-area"></div>                 
+                </div> 
+            </div>
+        </div>
+
         <!-- External JS libraries -->
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
@@ -38,7 +62,7 @@
         <script src="js/d3-tip.js"></script>
 
         <!-- Custom JS -->
-    	<script src="js/main.js"></script>
+        <script src="js/main.js"></script>
 
     </body>
 

@@ -1,47 +1,37 @@
 const MARGIN = { LEFT: 100, RIGHT: 10, TOP: 10, BOTTOM: 100 }
 const WIDTH = 800 - MARGIN.LEFT - MARGIN.RIGHT;
 const HEIGHT = 500 - MARGIN.TOP - MARGIN.BOTTOM;
-
-const svg = d3.select('#chart-area')
-    .append('svg')
+const transform = `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`;
+const svg = d3.select('#chart-area').append('svg')
     .attr('width', WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
     .attr('height', HEIGHT + MARGIN.TOP + MARGIN.BOTTOM);
-
-const transform = `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`;
-
-const g = svg.append('g')
-    .attr('transform', transform);
+const g = svg.append('g').attr('transform', transform);
 
 let time = 0;
+let interval;
+let formattedData;
+
+const addTooltip = (d) => {
+    const tips = [
+        { label: 'Country', value: d.country, caps: true },
+        { label: 'Continent', value: d.continent, caps: true },
+        { label: 'Life Expectancy', value: d3.format('.2f')(d.life_exp), caps: false },
+        { label: 'GDP Per Capita', value: d3.format('$,.0f')(d.income), caps: false },
+        { label: 'Population', value: d3.format(',.0f')(d.population), caps: false },
+    ];
+    return tips.map(makeLine).join('');
+}
+
+const makeLine = ({ label, value, caps }) => `<strong>${label}</strong> <span style="color:red;${caps ? 'text-transform:uppercase;' : ''}">${value}</span><br>`;
 
 // Tooltip
-const tip = d3.tip()
-    .attr('class', 'd3-tip')
-	.html(d => {
-		let text = `<strong>Country:</strong> <span style='color:red;text-transform:capitalize'>${d.country}</span><br>`
-		text += `<strong>Continent:</strong> <span style='color:red;text-transform:capitalize'>${d.continent}</span><br>`
-		text += `<strong>Life Expectancy:</strong> <span style='color:red'>${d3.format(".2f")(d.life_exp)}</span><br>`
-		text += `<strong>GDP Per Capita:</strong> <span style='color:red'>${d3.format("$,.0f")(d.income)}</span><br>`
-		text += `<strong>Population:</strong> <span style='color:red'>${d3.format(",.0f")(d.population)}</span><br>`
-		return text
-	});
-
+const tip = d3.tip().attr('class', 'd3-tip').html(addTooltip);
 g.call(tip);
 
 // Scales
-const x = d3.scaleLog()
-    .base(10)
-    .range([0, WIDTH])
-    .domain([142, 150000]);
-
-const y = d3.scaleLinear()
-    .range([HEIGHT, 0])
-    .domain([0, 90]);
-
-const area = d3.scaleLinear()
-    .range([25 * Math.PI, 1500 * Math.PI])
-    .domain([2000, 1400000000]);
-
+const x = d3.scaleLog().base(10).range([0, WIDTH]).domain([142, 150000]);
+const y = d3.scaleLinear().range([HEIGHT, 0]).domain([0, 90]);
+const area = d3.scaleLinear().range([25 * Math.PI, 1500 * Math.PI]).domain([2000, 1400000000]);
 const continentColour = d3.scaleOrdinal(d3.schemePastel1);
 
 // Labels
@@ -67,24 +57,15 @@ const timeLabel = g.append('text')
     .text('1800');
 
 // X Axis
-const xAxisCall = d3.axisBottom(x)
-    .tickValues([400, 4000, 40000])
-    .tickFormat(d3.format('$'));
-g.append('g')
-    .attr('class', 'x axis')
-    .attr('transform', `translate(0, ${HEIGHT})`)
-    .call(xAxisCall);
+const xAxisCall = d3.axisBottom(x).tickValues([400, 4000, 40000]).tickFormat(d3.format('$'));
+g.append('g').attr('class', 'x axis').attr('transform', `translate(0, ${HEIGHT})`).call(xAxisCall);
 
 // Y Axis
-const yAxisCall = d3.axisLeft(y)
-g.append('g')
-    .attr('class', 'y axis')
-    .call(yAxisCall);
+const yAxisCall = d3.axisLeft(y);
+g.append('g').attr('class', 'y axis').call(yAxisCall);
 
 // Legend
-const legend = g.append('g')
-    .attr('transform', `translate(${WIDTH - 10}, ${HEIGHT - 125})`);
-
+const legend = g.append('g').attr('transform', `translate(${WIDTH - 10}, ${HEIGHT - 125})`);
 const continents = ['europe', 'asia', 'americas', 'africa'];
 
 continents.forEach((continent, i) => {
@@ -106,7 +87,7 @@ continents.forEach((continent, i) => {
 
 d3.json('data/data.json').then(function (data) {
     // Clean data
-    const formattedData = data.map(year => {
+    formattedData = data.map(year => {
         return year['countries'].filter(country => {
             const dataExists = (country.income && country.life_exp);
             return dataExists;
@@ -117,25 +98,18 @@ d3.json('data/data.json').then(function (data) {
         });
     });
 
-    // Run the code every 0.1 second
-    d3.interval(function () {
-        // At the end of our data, loop back
-        time = (time < 214) ? time + 1 : 0;
-        update(formattedData[time]);
-    }, 10000);
-
     // First run of the visualization
     update(formattedData[0]);
 })
 
 function update(data) {
     // Standard transition time for the visualization
-    const t = d3.transition()
-        .duration(100);
+    const t = d3.transition().duration(100);
+    const continent = $('#continent-select').val();
+    const filteredData = data.filter(d => continent === 'all' ? true : d.continent == continent);
 
     // JOIN new data with old elements
-    const circles = g.selectAll('circle')
-        .data(data, d => d.country);
+    const circles = g.selectAll('circle').data(filteredData, d => d.country);
 
     // EXIT old elements not present in new data
     circles.exit().remove();
@@ -144,7 +118,7 @@ function update(data) {
     circles.enter().append('circle')
         .attr('fill', d => continentColour(d.continent))
         .on('mouseover', tip.show)
-		.on('mouseout', tip.hide)
+        .on('mouseout', tip.hide)
         .merge(circles)
         .transition(t)
         .attr('cy', d => y(d.life_exp))
@@ -154,3 +128,27 @@ function update(data) {
     // Update the time label
     timeLabel.text(String(time + 1800));
 }
+
+const step = () => {
+    // At the end of our data, loop back
+    time = (time < 214) ? time + 1 : 0;
+    update(formattedData[time]);
+}
+
+$('#play-button').on('click', function () {
+    const button = $(this);
+    if (button.text() === 'Play') {
+        button.text('Pause');
+        interval = setInterval(step, 20);
+    } else {
+        button.text('Play');
+        clearInterval(interval);
+    }
+});
+
+$('#reset-button').on('click', () => {
+    time = 0;
+    update(formattedData[0]);
+});
+
+$('#continent-select').on('change', () => update(formattedData[time]));
